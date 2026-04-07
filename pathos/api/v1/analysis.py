@@ -37,11 +37,17 @@ def analyze_code():
         else:
             result = service.analyze_file_dict(files, options=options)
         
+        # Serialize graph nodes and edges properly
+        # TopologyGraph.nodes() returns list of dicts, edges() returns list of dicts
+        nodes = result.graph.nodes()  # Already formatted with "id" key
+        edges = result.graph.edges()  # Already formatted with "source", "target" keys
+        
         return jsonify({
+            "source": "code",
             "summary": result.summary,
             "graph": {
-                "nodes": result.graph.nodes(),
-                "edges": result.graph.edges(),
+                "nodes": nodes,
+                "links": edges,
             },
             "contradictions": [
                 {
@@ -55,6 +61,7 @@ def analyze_code():
                 }
                 for c in result.contradictions
             ],
+            "conductivity_analysis": result.conductivity_findings,
         })
     
     except Exception as e:
@@ -105,11 +112,18 @@ def analyze_github():
                 service = AnalysisService()
                 result = service.analyze_directory(repo_path, options=options)
                 
+                # Serialize graph nodes and edges properly
+                # TopologyGraph.nodes() returns list of dicts, edges() returns list of dicts
+                nodes = result.graph.nodes()  # Already formatted with "id" key
+                edges = result.graph.edges()  # Already formatted with "source", "target" keys
+                
                 return jsonify({
+                    "source": "github",
+                    "url": github_url,
                     "summary": result.summary,
                     "graph": {
-                        "nodes": result.graph.nodes(),
-                        "edges": result.graph.edges(),
+                        "nodes": nodes,
+                        "links": edges,
                     },
                     "contradictions": [
                         {
@@ -123,8 +137,7 @@ def analyze_github():
                         }
                         for c in result.contradictions
                     ],
-                    "source": "github",
-                    "url": github_url,
+                    "conductivity_analysis": result.conductivity_findings,
                 })
             except Exception as e:
                 logger.error(f"Analysis failed: {e}", exc_info=True)

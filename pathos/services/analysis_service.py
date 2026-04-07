@@ -14,6 +14,7 @@ from pathos.core.graph import TopologyGraph
 from pathos.core.parser import CodeParser
 from pathos.core.contradiction import ContradictionDetector, Contradiction
 from pathos.ai.claude import ClaudeSynthesizer
+from pathos.plugins.conductivity import ConductivityAnalyzer  # Frankfurt School analysis
 
 logger = get_logger("services.analysis")
 
@@ -33,10 +34,13 @@ class AnalysisResult:
     contradictions: list[Contradiction]
     summary: dict
     interpretations: dict[str, str] = None
+    conductivity_findings: list[dict] = None
     
     def __post_init__(self):
         if self.interpretations is None:
             self.interpretations = {}
+        if self.conductivity_findings is None:
+            self.conductivity_findings = []
 
 
 class AnalysisService:
@@ -142,15 +146,22 @@ class AnalysisService:
         graph: TopologyGraph,
         options: AnalysisOptions,
     ) -> AnalysisResult:
-        """Detect contradictions and optionally synthesize."""
+        """Detect contradictions, run critical conductism analysis, and optionally synthesize."""
         logger.debug("Detecting contradictions...")
         contradictions = self._detector.detect(graph)
         logger.info(f"Found {len(contradictions)} contradictions")
+        
+        # Run Critical Conductism analysis (Frankfurt School)
+        logger.debug("Running Critical Conductism analysis...")
+        conductivity_analyzer = ConductivityAnalyzer()
+        conductivity_findings = conductivity_analyzer.analyze(graph)
+        logger.info(f"Critical Conductism analysis: {len(conductivity_findings)} findings")
         
         result = AnalysisResult(
             graph=graph,
             contradictions=contradictions,
             summary=graph.summary(),
+            conductivity_findings=conductivity_findings,
         )
         
         # Synthesis
